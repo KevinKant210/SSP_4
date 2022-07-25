@@ -375,12 +375,16 @@ void assign(lexeme identifier){
 	}
 
 	lexeme currToken = getToken();
-	
-	if(currToken.type != becomessym){
+
+	if(currToken.type != becomessym ||currToken.type != addassignsym || 
+	currToken.type != subassignsym ||  currToken.type != timesassignsym ||
+	currToken.type != divassignsym ||currToken.type != modassignsym){
 		printparseerror(5);
 		hasError = true;
 		return;
 	}
+
+	emit(3,level-table[identIndex].level,table[identIndex].addr);
 
 	expression();
 
@@ -388,6 +392,22 @@ void assign(lexeme identifier){
 		return;
 	}
 
+	if(currToken.type == addassignsym){
+		emit(2,0,2);
+	}
+	else if(currToken.type == subassignsym){
+		emit(2,0,3);
+	}
+	else if(currToken.type == timesassignsym){
+		emit(2,0,4);
+	}
+	else if(currToken.type == divassignsym){
+		emit(2,0,5);
+	}
+	else if(currToken.type == modassignsym){
+		emit(2,0,6);
+	}
+	
 	emit(4,level-table[identIndex].level,table[identIndex].addr);
 		
 }
@@ -966,7 +986,7 @@ void printparseerror(int err_code)
 			printf("Parser Error: Procedure declarations should follow the pattern 'ident ;'\n");
 			break;
 		case 5:
-			printf("Parser Error: Variables must be assigned using :=\n");
+			printf("Parser Error: Variables must be assigned using  :=, +=, -=, *=, /=, or %%=\n");
 			break;
 		case 6:
 			printf("Parser Error: Only variables may be assigned to or read\n");
