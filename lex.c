@@ -11,35 +11,24 @@ Due: 06/25/2022
 #include <string.h>
 #include <ctype.h>
 
+//include the compil.er headerfile
+#include "compiler.h"
+
 
 #define MAX_LEXEME_LENGTH 500
 #define false 0
 #define true 1
 #define iscomment -1
 
+\
+
 //different type of errors we can run into
 typedef enum error_type{
     none = -2, no_letter_on_start = -3,long_number = -4, invalid_symbol = -5, comment_error = -6,too_long_identifier = -7 } error_type;
 
-// all the types the tokens can be
-typedef enum token_type { elsesym  =  1,  identsym  =  2,  numbersym  =  3,  plussym  =  4,  minussym  =  5,  multsym  =  6,  
-slashsym = 7, modsym = 8,  eqlsym = 9, neqsym = 10, lessym = 11, leqsym = 12, 
-gtrsym = 13, geqsym = 14, lparentsym = 15, rparentsym = 16, commasym = 17, 
-semicolonsym = 18, periodsym = 19, becomessym = 20, beginsym = 21, endsym = 22, ifsym 
-= 23, thensym = 24, whilesym = 25, dosym = 26, callsym = 27, constsym = 28, varsym = 29, 
-procsym = 30, writesym = 31, readsym = 32 } token_type;
-
-// token.type = modsym == token.type = 8;
-// saves us the headache of putting in numbers
 
 
 
-typedef struct lexeme{
-    token_type type;
-    char name[12];
-    int value;
-    int error_type;
-}lexeme;
 
 
 
@@ -195,16 +184,20 @@ void printName(lexeme token){
     }
 }
 
+ 
 
 
-int main(int argc, char* argv[]){
+
+lexeme* lexical_analyzer(char* input){
+
+    //need to change for reading in char* input
 
     lexeme* tokenTable = (lexeme*) malloc(sizeof(lexeme)*MAX_LEXEME_LENGTH);
 
-    FILE *fp;
-    fp = fopen(argv[1], "r");
-
     
+
+    int inputIndex = 0;
+
     int halt = false;
     int tokenCounter = 0;
     while(halt == false){
@@ -219,12 +212,14 @@ int main(int argc, char* argv[]){
         }
         newLex.error_type = none;
         newLex.type = 0;
-        c = fgetc(fp);
-        
-        
 
-        
-        if(c == EOF){
+
+        //c = fgetc(fp);
+        c = input[inputIndex];
+        inputIndex++;
+
+        //change from EOF to end of string
+        if(c == '\0'){
             //end the file
             halt = true;
         }else if(isspace(c)){   
@@ -240,7 +235,9 @@ int main(int argc, char* argv[]){
             int alphaHalt = false;
             while(alphaHalt == false){
                 
-                c = fgetc(fp);
+                //c = fgetc(fp);
+                c = input[inputIndex];
+                input++;
 
                 if(newLex.error_type != none){
                     //error so we keep reading until symbol or whitespace
@@ -248,7 +245,8 @@ int main(int argc, char* argv[]){
                         //do nothing
                     }else{
                         //ran into symbol or blank character so put it back for the main to handle
-                        ungetc(c,fp);
+                        //ungetc(c,fp);
+                        input--;
                         alphaHalt = true;
                     }
                 
@@ -264,7 +262,8 @@ int main(int argc, char* argv[]){
                 }else{
                     //isnt a letter or digit so must be a symbol or a space
                     
-                    ungetc(c,fp);
+                    //ungetc(c,fp);
+                    inputIndex--;
 
                     //finalize and store token
                     if(strcmp(newLex.name,"else") == 0){
@@ -318,12 +317,17 @@ int main(int argc, char* argv[]){
 
             //grab substring of numbers
             while(numHalt == false){
-                c = fgetc(fp);
+
+                //c = fgetc(fp);
+                c = input[inputIndex];
+                input++;
 
                 if(newLex.error_type != none){
                     //we ran into an error at some point so read until we get to a new symbol or blankspace
                     if(isalpha(c) == false && isdigit(c) == false){
-                        ungetc(c,fp);
+                        //ungetc(c,fp);
+                        input--;
+
                         numHalt = true;
                     }
 
@@ -348,7 +352,9 @@ int main(int argc, char* argv[]){
                     
                 }else{
                     //must be some kind of symbol or whitespace so we put it back and end this DFA
-                    ungetc(c,fp);
+                    //ungetc(c,fp);
+                    inputIndex--;
+
                     newLex.type = numbersym;
 
                     sscanf(newLex.name,"%d",&(newLex.value));
@@ -362,7 +368,9 @@ int main(int argc, char* argv[]){
         }else{
             //we ran into a symbol
             
-            next = fgetc(fp);
+            //next = fgetc(fp);
+            next = input[inputIndex];
+            input++;
 
             int output = isSpecialSymbol(c,next,&newLex);
 
@@ -373,13 +381,19 @@ int main(int argc, char* argv[]){
                     int commentHalt = false;
 
                     while(commentHalt == false){
-                        char temp = fgetc(fp);
+                        //char temp = fgetc(fp);
+                        char temp = input[inputIndex];
+                        inputIndex++;
 
                         if(temp == EOF){
                             newLex.error_type = comment_error;
                             commentHalt = true;
                         }else if(temp == '*'){
-                            temp = fgetc(fp);
+
+                            //temp = fgetc(fp);
+                            temp = input[inputIndex];
+                            inputIndex++;
+
                             if(temp == '/'){
                                 commentHalt = true;
                             }
@@ -394,7 +408,8 @@ int main(int argc, char* argv[]){
                 if(output == neqsym || output == leqsym || output == geqsym || output == becomessym){
                     
                 }else{
-                    ungetc(next,fp);
+                    //ungetc(next,fp);
+                    inputIndex--;
                 }
 
                 newLex.type = output;
@@ -411,7 +426,7 @@ int main(int argc, char* argv[]){
         
     
     //we can close the filepointer we are no longer reading
-    fclose(fp);
+    //fclose(fp);
 
     //now we just print out the token table
     printf("Lexeme Table:\n");
@@ -437,13 +452,14 @@ int main(int argc, char* argv[]){
         
     }
     
+    int hasError = false;
     //we now print out lex table output
     printf("\nToken List:\n");
         for(int i = 0; i < tokenCounter; i++){
 
             
             if(tokenTable[i].error_type != none){
-                
+                hasError = true;
             }else{
                 if(tokenTable[i].type == 0){
                     //this must be some whitespace or EOF that slipped through the cracks
@@ -470,11 +486,15 @@ int main(int argc, char* argv[]){
         }
 
         //free our token table and slap on a whitespace
-        free(tokenTable);   
+        //free(tokenTable);   
 
         printf("\n");
-
-        return 0;
+        if(hasError == true){
+            return NULL;
+        }else{
+            return tokenTable;
+        }
+        
     }
 
     
