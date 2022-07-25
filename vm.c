@@ -10,6 +10,7 @@ Due: 06/05/2022
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "compiler.h"
 #define MAX_PAS_LENGTH 500
 
 struct IR{
@@ -29,13 +30,15 @@ int base(int L,int BP, int pas[]){
     return arb;
 }
 
-int main(int argc, char* argv[]){
+void virtual_machine(instruction* code){
 
     // This is the only pointer used, its simply to communicate with the text file and does not have any impact on the vm
-    FILE *fp;
+   // FILE *fp;
     
     
-    fp = fopen(argv[1], "r");
+    //fp = fopen(argv[1], "r");
+    
+    int codeIndex = 0;
 
     int pas[MAX_PAS_LENGTH];
     int arhold[MAX_PAS_LENGTH/5];
@@ -50,22 +53,28 @@ int main(int argc, char* argv[]){
     int sp = 0;
 
     while(!halt){
-        int op =0, l =0, m= 0;
-        fscanf(fp,"%d %d %d", &op, &l, &m);
+        int op = 0, l = 0, m = 0;
+
+        //fscanf(fp,"%d %d %d", &op, &l, &m);
+        op = code[codeIndex].op;
+        l = code[codeIndex].l;
+        m = code[codeIndex].m;
+        codeIndex++;
         
         pas[sp] = op;
         pas[sp+1] = l;
         pas[sp+2] = m;
         sp += 3;
         
-        if(op == 9 && m == 3){
+        //change from op == 9 && m ==3 to op == -1
+        if(op == -1){
             halt = 1;
             sp -= 1;
         }
     }
 
     //closing out the file stream
-    fclose(fp);
+    //fclose(fp);
 
     //generating out initial vars
     struct IR ir;
