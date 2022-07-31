@@ -32,12 +32,6 @@ int base(int L,int BP, int pas[]){
 
 void virtual_machine(instruction* code){
 
-    // This is the only pointer used, its simply to communicate with the text file and does not have any impact on the vm
-   // FILE *fp;
-    
-    
-    //fp = fopen(argv[1], "r");
-    
     int codeIndex = 0;
 
     int pas[MAX_PAS_LENGTH];
@@ -56,6 +50,7 @@ void virtual_machine(instruction* code){
         int op = 0, l = 0, m = 0;
 
         //fscanf(fp,"%d %d %d", &op, &l, &m);
+
         op = code[codeIndex].op;
         l = code[codeIndex].l;
         m = code[codeIndex].m;
@@ -72,9 +67,6 @@ void virtual_machine(instruction* code){
             sp -= 1;
         }
     }
-
-    //closing out the file stream
-    //fclose(fp);
 
     //generating out initial vars
     struct IR ir;
